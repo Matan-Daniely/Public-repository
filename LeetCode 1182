@@ -1,0 +1,59 @@
+/** Question:
+You are given an array colors, in which there are three colors: 1, 2 and 3.
+
+You are also given some queries. Each query consists of two integers i and c, return the shortest distance between the given index i and the target color c. If there is no solution return -1. **/
+
+//Solution:
+
+const int colors_num = 3;
+class Solution {
+public:
+    void fill_min_distances(vector<vector<int>>& min_distances , const vector<int>& colors)
+    {
+        const int n = colors.size();
+        min_distances[0][colors[0]-1] = 0;
+        min_distances[n-1][colors[n-1]-1] = 0;
+        int left = 1 , right = n-2;
+        while(left < n && right >= 0)
+        {
+            for(int color = 1 ; color <= 3 ; ++color)
+            {
+                // Updating according to closest color from the left:
+                if(colors[left] == color)
+                    min_distances[left][color-1] = 0;
+                else
+                    min_distances[left][color-1]=min(min_distances[left][color-1],min_distances[left-1][color-1]+1);
+                
+                // Updating according to closest color from the right:
+                if(colors[right] == color)
+                    min_distances[right][color-1] = 0;
+                else
+                    min_distances[right][color-1]=min(min_distances[right][color-1],min_distances[right+1][color-1]+1);
+            }
+            ++left;
+            --right;
+        }
+    }
+
+
+    vector<int> shortestDistanceColor(vector<int>& colors, vector<vector<int>>& queries) 
+    {
+        const int n = colors.size();
+        vector<vector<int>> min_distances(n , vector<int>(colors_num , n+1));
+
+        fill_min_distances(min_distances , colors);
+
+        // Creating ans according to the min distances in min_distances and the relevant query:
+        vector<int> ans(queries.size());
+        for(int i = 0 ; i < queries.size() ; ++i)
+        {
+            int index = queries[i][0] , color = queries[i][1]-1;
+            int dist = min_distances[index][color];
+            if(dist < n+1)
+                ans[i] = dist;
+            else
+                ans[i] = -1;
+        }
+        return ans;
+    }
+};
