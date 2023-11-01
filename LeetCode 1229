@@ -1,0 +1,48 @@
+/** Question:
+Given the availability time slots arrays slots1 and slots2 of two people and a meeting duration duration, return the earliest time slot that works for both of them and is of duration duration.
+
+If there is no common time slot that satisfies the requirements, return an empty array.
+
+The format of a time slot is an array of two elements [start, end] representing an inclusive time range from start to end.
+
+It is guaranteed that no two availability slots of the same person intersect with each other. That is, for any two time slots [start1, end1] and [start2, end2] of the same person, either start1 > end2 or start2 > end1. **/
+
+// Solution:
+class Solution 
+{   
+public:
+    static bool my_comperator(const vector<int>& interval1 , const vector<int>& interval2)
+    {
+        return interval1[1] < interval2[1];
+    }
+    vector<int> minAvailableDuration(vector<vector<int>>& slots1, vector<vector<int>>& slots2, int duration) 
+    {
+        const int n1 = slots1.size() , n2 = slots2.size();
+        int p1 = 0 , p2 = 0;
+        // Sort slots1 and slots2 according to the ending times:
+        sort(slots1.begin() , slots1.end() , my_comperator);
+        sort(slots2.begin() , slots2.end() , my_comperator);
+
+        while(p1 < n1 && p2 < n2)
+        {
+            // Curr intervals intersection is [curr_Start , curr_end]:
+            int curr_start = max(slots1[p1][0] , slots2[p2][0]);
+            int curr_end = min(slots1[p1][1] , slots2[p2][1]);
+
+            if(curr_end-curr_start >= duration)
+                return {curr_start , curr_start+duration};
+            
+            // Advance the pointer that points to the earlier ending interval (or both in case of equality):
+            if(slots1[p1][1] < slots2[p2][1])
+                ++p1;
+            else if(slots1[p1][1] > slots2[p2][1])
+                ++p2;
+            else
+            {
+                ++p1;
+                ++p2;
+            }
+        }
+        return {};
+    }
+};
