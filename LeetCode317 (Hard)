@@ -1,0 +1,123 @@
+/** Question:
+You are given an m x n grid grid of values 0, 1, or 2, where:
+
+each 0 marks an empty land that you can pass by freely,
+each 1 marks a building that you cannot pass through, and
+each 2 marks an obstacle that you cannot pass through.
+You want to build a house on an empty land that reaches all buildings in the shortest total travel distance. You can only move up, down, left, and right.
+
+Return the shortest travel distance for such a house. If it is not possible to build such a house according to the above rules, return -1.
+
+The total travel distance is the sum of the distances between the houses of the friends and the meeting point.
+
+The distance is calculated using Manhattan Distance, where distance(p1, p2) = |p2.x - p1.x| + |p2.y - p1.y|. **/
+
+//Solution:
+
+class Solution 
+{
+private:
+    int buildings_counter;
+    int ans = INT_MAX;
+    const vector<vector<int>> directions = {{-1,0} , {1,0} , {0,-1} , {0,1}};
+
+    bool can_visit(int next_row , int next_col , vector<vector<bool>>& visited , const vector<vector<int>>& grid)
+    {
+        if (next_row<0 || next_row>=visited.size() || next_col<0 || next_col>=visited[0].size())
+            return false;
+
+        return !visited[next_row][next_col] && grid[next_row][next_col] != 2; 
+    }
+    int count_buildings(vector<vector<int>>& grid)
+    {
+        const int m = grid.size() , n = grid[0].size();
+        int res = 0;
+        for(int r = 0 ; r < m ; ++r)
+            for(int c = 0 ; c < n ; ++c)
+                res += (grid[r][c] == 1);
+        return res;
+    }
+
+
+public:
+    // Actually preforming the BFS with source = {row,col}:
+    int internal_BFS(vector<vector<int>>& grid , int row , int col , queue<pair<int,int>>& q ,
+    vector<vector<bool>>& visited)
+    {
+        int result = 0 , BC_copy = buildings_counter , curr_dist = 0;
+        while(q.size() > 0)
+        {
+            int q_size = q.size();
+            for(int i = 0 ; i < q_size ; ++i)
+            {
+                int curr_row = q.front().first , curr_col = q.front().second;
+                q.pop();
+
+                for(auto& dir : directions)
+                {
+                    int next_row = curr_row+dir[0] , next_col = curr_col+dir[1] , next_dist = curr_dist+1;
+                    if(!can_visit(next_row , next_col , visited , grid))
+                        continue;
+                    
+                    visited[next_row][next_col] = true;
+                    if(grid[next_row][next_col] == 1)
+                    {
+                        result += next_dist;
+                        if(--BC_copy == 0 || result >= ans)
+                            return result;
+                    }
+                    else  
+                        q.push({next_row , next_col});
+                }
+            }
+            ++curr_dist;
+        }
+
+        // If a building B isn't reachable from the source, then B isn't reachable from any land cell that is
+        // reachable from the source (i.e.: all the land cells that were traversed during the current BFS), and hence-
+        // not a valid solution, so we mark them so
+        // that we won't preform BFS starting from them:
+        if(BC_copy != 0)
+        {
+            const int m = grid.size() , n = grid[0].size();
+            for(int r = 0 ; r < m ; ++r)
+                for(int c = 0 ; c < n ; ++c)
+                    if(visited[r][c] && grid[r][c] == 0)
+                        grid[r][c] = 2;
+
+            return INT_MAX;
+        }
+            
+
+        return result;
+    }
+
+    // Utility function for preforming BFS:
+    int BFS(vector<vector<int>>& grid , int row , int col)
+    {
+        queue<pair<int,int>> q;
+        q.push({row,col});
+        vector<vector<bool>> visited(grid.size() , vector<bool>(grid[0].size() , false));
+        visited[row][col] = true;
+
+        return internal_BFS(grid , row , col , q , visited);
+    }
+
+    int shortestDistance(vector<vector<int>>& grid) 
+    {
+        const int m = grid.size() , n = grid[0].size();
+        buildings_counter = count_buildings(grid);
+
+        // Preform BFS from each empty land to all buildings:
+        for(int r = 0 ; r < m ; ++r)
+            for(int c = 0 ; c < n ; ++c)
+                if(grid[r][c] == 0)
+                    ans = min(ans , BFS(grid , r , c));
+        
+        if(ans == INT_MAX)
+            return -1;
+        return ans;
+    }
+};
+
+ 
