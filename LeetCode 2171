@@ -1,0 +1,34 @@
+/** Question:
+You are given an array of positive integers beans, where each integer represents the number of magic beans found in a particular magic bag.
+
+Remove any number of beans (possibly none) from each bag such that the number of beans in each remaining non-empty bag (still containing at least one bean) is equal. Once a bean has been removed from a bag, you are not allowed to return it to any of the bags.
+
+Return the minimum number of magic beans that you have to remove. **/
+
+// Solution:
+
+class Solution(object):
+    def minimumRemoval(self, beans):
+        """
+        :type beans: List[int]
+        :rtype: int
+        """
+        ans , beans_so_far , rolling_sum = float('inf') , 0 , sum(beans)
+        n = len(beans)
+        beans.sort()
+
+        # Evaluating each bag as a 'candidate' to be the one all bags reduced to:
+        for bag in beans:
+            curr_price = beans_so_far + rolling_sum - n*bag
+            ans = min(ans , curr_price)
+
+            # Updating rolling data:
+            beans_so_far += bag
+            rolling_sum -= bag
+            n -= 1
+
+            if beans_so_far >= ans:
+                break
+
+        return ans
+        
