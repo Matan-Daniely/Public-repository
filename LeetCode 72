@@ -1,0 +1,50 @@
+/** Question:
+Given two strings word1 and word2, return the minimum number of operations required to convert word1 to word2.
+
+You have the following three operations permitted on a word:
+
+Insert a character
+Delete a character
+Replace a character **/
+
+// Solution (space complexity is O(n), better then LeetCode's official solution's space complexity, which is O(n*m)): 
+
+class Solution {
+public:
+    int minDistance(string word1, string word2) 
+    {
+        const int n = word1.size() , m = word2.size();
+        if(n == 0 || m == 0)
+            return m+n;
+        
+        // ):
+        
+        // dp[i][j] = curr_dp[j] = the minimum steps to make word1[0:j] = word2[0:i]
+        vector<int> prev_dp(n) , curr_dp(n);
+        prev_dp[0] = word1[0] != word2[0];
+
+        // Creating the first row:
+        for(int i = 1 ; i < n ; ++i)
+            prev_dp[i] = min(i+(word1[i] != word2[0]) , prev_dp[i-1]+1);
+        
+        // Calculating dp for all the rest of the cells:
+        for(int r = 1 ; r < m ; ++r)
+        {
+            curr_dp[0] = min(r+(word1[0] != word2[r]) , prev_dp[0]+1);
+            for(int c = 1 ; c < n ; ++c)
+            {
+                int replace = prev_dp[c-1] + (word1[c] != word2[r]);
+                int remove = curr_dp[c-1] + 1;
+                int insert = prev_dp[c] + 1;
+                curr_dp[c] = min(replace , min(remove , insert));
+            }
+            prev_dp = curr_dp;
+        }
+
+        // Handle edge case:
+        if(m == 1)
+            return prev_dp[n-1];
+
+        return curr_dp[n-1];
+    }
+};
