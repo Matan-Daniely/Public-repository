@@ -9,13 +9,10 @@ Return the starting indices of all the concatenated substrings in s. You can ret
 // Solution:
 class Solution 
 {
-private:
-    int window_size;
-    int word_size;
-
-    // Returns True iff rolling_hash is a permutation (according to the questions's definition of permutation)
-    // of all_words: 
-    static bool permutation(const unordered_map<string,int>& all_words, unordered_map<string,int>& rolling_hash)
+int window_size;
+int word_size;
+public:
+    static bool permutation(const unordered_map<string,int>& all_words , unordered_map<string,int>& rolling_hash)
     {
         if(all_words.size() != rolling_hash.size())
             return false;
@@ -26,11 +23,8 @@ private:
         
         return true;
     }
-
-    // Updating ans based on rolling window starting from the given start index:
-    static void rolling_window(const string& s, int start, const unordered_map<string,int>& all_words, vector<int>& ans)
+    void rolling_window(const string& s , int start , const unordered_map<string,int>& all_words , vector<int>& ans)
     {
-        // Creating the initial rolling window:
         unordered_map<string , int> rolling_hash;
         for(int end = start + word_size ; end <= start+window_size ; end += word_size)
             ++rolling_hash[s.substr(end-word_size , word_size)];
@@ -41,31 +35,23 @@ private:
             if(permutation(all_words , rolling_hash))
                 ans.push_back(curr_window_begin);
             
-            // Removing the back of the rolling window:
             string remove = s.substr(curr_window_begin , word_size);
             if(--rolling_hash[remove] <= 0)
                 rolling_hash.erase(remove);
             
-            // Adding the front of the rolling window:
             ++rolling_hash[s.substr(curr_window_end , word_size)];
             curr_window_end += word_size;
             curr_window_begin += word_size;
         }
-    }
-
-public:
+    }   
     vector<int> findSubstring(string s, vector<string>& words) 
     {
         word_size = words[0].size();
         window_size = words.size() * word_size;
-
-        // Creating overall hash of the given words:
         unordered_map<string , int> all_words;
         for(auto& word : words)
             ++all_words[word];
         
-        // Preform rolling window from each starting index. since the window advances in word_size in each roll-
-        // it's enogh to check all starting points in the range [0 , word_size):
         vector<int> ans;
         for(int start = 0 ; start < word_size ; ++start)
             rolling_window(s , start , all_words , ans);
