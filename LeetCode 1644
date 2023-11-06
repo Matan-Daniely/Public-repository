@@ -1,0 +1,69 @@
+/** Question:
+Given the root of a binary tree, return the lowest common ancestor (LCA) of two given nodes, p and q.
+If either node p or q does not exist in the tree, return null. All values of the nodes in the tree are unique.
+According to the definition of LCA on Wikipedia:
+"The lowest common ancestor of two nodes p and q in a binary tree T is the lowest node that has both p and q as descendants (where we allow a node to be a descendant of itself)".
+A descendant of a node x is a node y that is on the path from node x to some leaf node. **/
+
+// Solution:
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ * };
+ */
+struct ret_val
+{
+    bool found_q;
+    bool found_p;
+    TreeNode* LCA;
+
+    ret_val(bool FQ , bool FP , TreeNode* LCA) : found_q(FQ) , found_p(FP) , LCA(LCA) {}
+};
+
+class Solution 
+{
+private:
+    static ret_val* post_order(TreeNode* root, const TreeNode* const p, const TreeNode* const q)
+    {
+        ret_val *ans = new ret_val(false , false , nullptr);
+        if(!root)
+            return ans;
+        
+        // Post order traversal:
+        ret_val *left_ST = post_order(root->left , p , q);
+        ret_val *right_ST = post_order(root->right , p , q);
+        
+        ans->found_q = root == q || left_ST->found_q || right_ST->found_q;
+        ans->found_p = root == p || left_ST->found_p || right_ST->found_p;
+
+        // Case 1: LCA already found in one of the subtrees:
+        if(left_ST->LCA != nullptr)
+            ans->LCA = left_ST->LCA;
+        else if(right_ST->LCA != nullptr)
+            ans->LCA = right_ST->LCA;
+        
+        // Case 2: The current node (root) is the LCA:
+        else if(ans->found_q && ans->found_p)
+            ans->LCA = root;
+        
+        // Case 3: The LCA is not in the subtree rooted in the current node (root):
+        // No need to do any updates (ans is in a currect state).
+
+        delete left_ST;
+        delete right_ST;
+        return ans;
+    }
+
+public:
+    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) 
+    {
+        ret_val *ans = post_order(root , p , q);
+        TreeNode* final_ans = ans->LCA;
+        delete ans;
+        return final_ans;
+    }
+};
