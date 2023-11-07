@@ -1,0 +1,88 @@
+/** Question:
+You are given an integer n, which indicates that there are n courses labeled from 1 to n.
+You are also given an array relations where relations[i] = [prevCoursei, nextCoursei], representing a prerequisite relationship between course prevCoursei and course nextCoursei: course prevCoursei has to be taken before course nextCoursei.
+In one semester, you can take any number of courses as long as you have taken all the prerequisites in the previous semester for the courses you are taking.
+
+Return the minimum number of semesters needed to take all courses. If there is no way to take all the courses, return -1.
+
+
+// Solution:
+
+struct node
+{
+    int id;
+    int visited;
+    int in_degree;
+    int dist;
+
+    node (int id , int v , int in_d , int d) : id(id) , visited(v) , in_degree(in_d) , dist(d) {}
+};
+
+
+class Solution 
+{
+private:
+    // Searching for unvisited nodes with in_degrees > 0 (i.e.: this nodes are part of a circle)
+    static bool search_unvisited_circles(const vector<node*>& nodes)
+    {
+        for(int i = 1 ; i < nodes.size() ; ++i)
+            if(nodes[i]->visited == 0 && nodes[i]->in_degree != 0)
+                return true;
+        
+        return false;
+    }
+public:
+    int minimumSemesters(int n, vector<vector<int>>& relations) 
+    {
+        // Creating adjacancy list:
+        vector<vector<int>> adj_list(n+1 , vector<int>());
+        vector<node*> nodes(n+1 , nullptr);
+        for(int i = 1 ; i <= n ; ++i)
+            nodes[i] = new node(i,0,0,0);
+
+        for(auto& edge : relations)
+        {
+            int src = edge[0] , dst = edge[1];
+            adj_list[src].push_back(dst);
+            ++nodes[dst]->in_degree;
+        }
+
+        // Preforming BFS with all 0-in-degree nodes as sources:
+        queue<node*> bfs_q;
+        for(auto& node : nodes)
+            if(node && node->in_degree == 0)
+            {
+                ++node->visited;
+                bfs_q.push(node);
+            }
+                
+        
+        if(bfs_q.empty())
+            return -1;
+        
+        int max_path = -1;
+        while(bfs_q.size() > 0)
+        {
+            node* curr_node = bfs_q.front();
+            bfs_q.pop();
+            max_path = max(max_path , curr_node->dist);
+
+            for(auto& neighbor : adj_list[curr_node->id])
+            {
+                ++nodes[neighbor]->visited;
+                if(nodes[neighbor]->visited > nodes[neighbor]->in_degree) // Found circle
+                    return -1;
+
+                if(nodes[neighbor]->visited < nodes[neighbor]->in_degree) // Not the longest path to neighbor
+                    continue;
+
+                nodes[neighbor]->dist = curr_node->dist + 1;
+                bfs_q.push(nodes[neighbor]);
+            }
+        }
+
+        if(search_unvisited_circles(nodes))
+            return -1;
+        return max_path+1; 
+    }
+};
